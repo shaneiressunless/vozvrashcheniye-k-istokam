@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nolvus Reborn</title>
+    <title>Skyrim Soul</title>
     <style>
+        /* --- ШРИФТЫ И БАЗА --- */
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
 
         body, html {
@@ -12,286 +13,261 @@
             background-color: #000;
             color: #fff;
             font-family: 'Cinzel', serif;
-            overflow: hidden;
+            overflow: hidden; /* Чтобы не было полос прокрутки */
         }
 
         /* --- ФОН --- */
         .bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://images.unsplash.com/photo-1478479405421-ce83c92fb3ba?q=80&w=1920&auto=format&fit=crop') no-repeat center center/cover;
+            /* Красивый фон Скайрима/Долины */
+            background: url('https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=1920&auto=format&fit=crop') no-repeat center center/cover;
             z-index: 1;
-            transition: transform 10s ease; /* Легкое движение фона */
+            transition: transform 10s ease-out; /* Плавный зум фона */
         }
-        
-        /* --- ИНТЕРФЕЙС --- */
+
+        /* --- МЕНЮ СЛЕВА --- */
         .ui-layer {
             position: relative; z-index: 10;
             height: 100%; display: flex; flex-direction: column; justify-content: center;
-            padding-left: 100px;
-            background: linear-gradient(to right, rgba(0,0,0,0.7), transparent);
+            padding-left: 80px;
+            /* Легкое затемнение слева, чтобы текст читался */
+            background: linear-gradient(to right, rgba(0,0,0,0.8) 0%, transparent 60%);
         }
 
         h1 {
-            font-size: 4rem; text-transform: uppercase; margin: 0;
-            text-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
-            margin-bottom: 50px;
+            font-size: 3.5rem; text-transform: uppercase; margin: 0; margin-bottom: 40px;
+            text-shadow: 0 0 20px rgba(169, 219, 255, 0.6);
+            letter-spacing: 5px;
         }
 
-        .menu-btn {
-            font-size: 1.5rem; color: #aaa; margin: 15px 0;
-            cursor: pointer; width: fit-content;
-            transition: 0.3s; position: relative;
+        .menu-item {
+            font-size: 1.1rem; color: #bbb; margin: 12px 0;
+            cursor: pointer; width: fit-content; position: relative;
+            text-transform: uppercase; letter-spacing: 2px;
+            transition: 0.3s;
         }
-        .menu-btn::before {
-            content: ''; position: absolute; left: -20px; top: 50%; 
-            width: 0; height: 2px; background: #aaddff; transition: 0.3s;
+        /* Эффект при наведении на меню */
+        .menu-item:hover { color: #fff; text-shadow: 0 0 8px #aaddff; padding-left: 10px; }
+        .menu-item::before {
+            content: ''; position: absolute; left: -15px; top: 50%; transform: translateY(-50%);
+            width: 0; height: 1px; background: #aaddff; transition: 0.3s;
         }
-        .menu-btn:hover { color: #fff; text-shadow: 0 0 10px #aaddff; transform: translateX(10px); }
-        .menu-btn:hover::before { width: 15px; }
+        .menu-item:hover::before { width: 10px; }
 
 
-        /* ==================================================
-           ЭФФЕКТ 1: УХОД (ДЫМ/ИНЕЙ С КРАЕВ) - SVG MASK
-           ================================================== */
-        .transition-out-layer {
+        /* =================================================================
+           ЭФФЕКТ 1: УХОД СО СТРАНИЦЫ (ТУМАН/ЛЕД)
+           Вместо круга используем масштабирование текстуры "виньетки"
+           ================================================================= */
+        .frost-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9990;
+            z-index: 9900;
             pointer-events: none;
-            background-color: #000;
-            
-            /* Это магия маски. Мы используем текстуру, чтобы края были рваными */
-            mask-image: url('https://raw.githubusercontent.com/shaneiressunless/vozvrashcheniye-k-istokam/main/mask.png'), radial-gradient(circle, black 50%, transparent 100%);
-            mask-size: cover;
-            mask-composite: exclude; 
-            -webkit-mask-image: radial-gradient(circle at center, transparent 70%, black 100%); /* Fallback start */
-            
+            /* Генерируем "шумную" рамку через градиенты */
+            background: radial-gradient(circle, transparent 50%, black 100%);
             opacity: 0;
-            transition: opacity 0.2s;
+            /* ХИТРОСТЬ: Растягиваем дырку за пределы экрана */
+            transform: scale(2.5); 
+            transition: transform 2.5s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 1s;
         }
 
-        /* Анимация сужения обзора */
-        .fog-crawling {
-            opacity: 1;
-            /* Мы сжимаем прозрачную область в центре до 0 */
-            animation: chokeScreen 2s forwards cubic-bezier(0.2, 0, 0.2, 1);
-        }
-
-        @keyframes chokeScreen {
-            0% { 
-                /* Центр прозрачный (видим сайт), края черные */
-                -webkit-mask-image: radial-gradient(circle at center, transparent 70%, black 90%);
-                mask-image: radial-gradient(circle at center, transparent 70%, black 90%);
-            }
-            100% { 
-                /* Чернота сожрала всё */
-                -webkit-mask-image: radial-gradient(circle at center, transparent 0%, black 0%);
-                mask-image: radial-gradient(circle at center, transparent 0%, black 0%);
-            }
-        }
-        
-        /* Дополнительный слой шума для "дрожания" краев */
-        .noise-overlay {
-            position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: url('https://assets.codepen.io/13471/noise.png'); /* Прозрачный шум */
-            opacity: 0; z-index: 9991; pointer-events: none;
-        }
-        .noise-active {
-            opacity: 0.3;
-            animation: noiseMove 0.2s infinite;
-        }
-        @keyframes noiseMove { 0% {transform: translate(0,0)} 100% {transform: translate(10px, 10px)} }
-
-
-        /* ==================================================
-           ЭФФЕКТ 2: ЗАГРУЗКА (СНЕЖИНКИ)
-           ================================================= */
-        .loader-layer {
+        /* Дополнительный слой шума для текстуры */
+        .noise-texture {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #111;
-            z-index: 9995;
+            z-index: 9901; opacity: 0; pointer-events: none;
+            /* Мелкая зернистость */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
+        }
+
+        .frost-active {
+            opacity: 1;
+            transform: scale(0.1); /* Сжимаем дырку в точку -> экран чернеет */
+        }
+
+
+        /* =================================================================
+           ЭФФЕКТ 2: ЗАГРУЗКА (СНЕЖИНКИ ВПРАВО)
+           ================================================================= */
+        .loader-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #080808; /* Почти черный */
+            z-index: 9950;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             opacity: 0; visibility: hidden;
-            transition: opacity 0.5s;
+            transition: opacity 1s;
+        }
+        .loader-text {
+            font-size: 1.2rem; letter-spacing: 3px; color: #888; margin-bottom: 20px;
+            font-family: sans-serif; text-transform: uppercase;
         }
         
-        .loader-text {
-            font-size: 1.5rem; letter-spacing: 5px; color: #ccc; margin-bottom: 20px;
-            font-weight: lighter;
-        }
-
-        .snow-container {
-            width: 200px; height: 50px; position: relative;
-        }
+        /* Контейнер для снежинок */
+        .snow-track { width: 150px; height: 30px; position: relative; }
+        
         .flake {
             position: absolute; width: 3px; height: 3px; background: #fff;
-            box-shadow: 0 0 10px #fff, 0 0 20px #00aaff;
             border-radius: 50%; opacity: 0;
-            animation: flyRight 1.5s linear infinite;
-        }
-        @keyframes flyRight {
-            0% { transform: translate(0, 0); opacity: 0; }
-            10% { opacity: 1; }
-            80% { opacity: 1; }
-            100% { transform: translate(200px, 10px); opacity: 0; }
+            box-shadow: 0 0 4px #fff;
+            animation: moveRight 1.5s infinite linear;
         }
         .f1 { top: 10px; left: 0; animation-delay: 0s; }
-        .f2 { top: 25px; left: 0; animation-delay: 0.3s; }
-        .f3 { top: 15px; left: 0; animation-delay: 0.6s; }
+        .f2 { top: 20px; left: 0; animation-delay: 0.5s; }
+        .f3 { top: 5px; left: 0; animation-delay: 1.0s; }
+
+        @keyframes moveRight {
+            0% { transform: translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(150px); opacity: 0; }
+        }
 
 
-        /* ==================================================
-           ЭФФЕКТ 3: СГОРАНИЕ (ТУРБУЛЕНТНОСТЬ)
-           ================================================= */
-        /* Черная шторка */
-        .burn-curtain {
+        /* =================================================================
+           ЭФФЕКТ 3: ВХОД (СИНЕЕ ПЛАМЯ ИЗ ЦЕНТРА)
+           Используем SVG фильтр для искажения круга
+           ================================================================= */
+        
+        /* Черный слой, который закрывает всё */
+        .burn-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 9999;
             pointer-events: none;
-            opacity: 1; /* Сначала всё закрыто */
             
-            /* Подключаем SVG фильтр искажения к маске */
-            filter: url('#fire-distortion'); 
+            /* Мы вырезаем дырку в центре. Но чтобы она была рваной, применим фильтр */
+            /* Изначально дырка 0% (экран черный) */
+            -webkit-mask-image: radial-gradient(circle, transparent 0%, black 0%);
+            mask-image: radial-gradient(circle, transparent 0%, black 0%);
+            
+            /* ВАЖНО: Применяем искажение */
+            filter: url('#wavy-fire'); 
         }
 
-        .burn-active {
-            animation: burnOpen 2.5s forwards ease-in-out;
-        }
-
-        @keyframes burnOpen {
-            0% {
-                /* Дырка 0%. Черный экран. */
-                -webkit-mask-image: radial-gradient(circle at center, transparent 0%, black 0%);
-                mask-image: radial-gradient(circle at center, transparent 0%, black 0%);
-            }
-            20% {
-                 /* Маленькая дырка, огонь разгорается */
-                -webkit-mask-image: radial-gradient(circle at center, transparent 5%, black 20%);
-                mask-image: radial-gradient(circle at center, transparent 5%, black 20%);
-            }
-            100% {
-                /* Дырка на весь экран */
-                -webkit-mask-image: radial-gradient(circle at center, transparent 150%, black 180%);
-                mask-image: radial-gradient(circle at center, transparent 150%, black 180%);
-            }
-        }
-        
-        /* Сияние краев огня (подложка) */
-        .fire-glow {
+        /* Синяя подложка (свечение огня) */
+        .blue-glow {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9998; pointer-events: none;
-            background: radial-gradient(circle at center, rgba(150, 220, 255, 1) 0%, transparent 0%);
+            background: radial-gradient(circle, rgba(50, 150, 255, 1) 0%, transparent 0%);
             opacity: 0;
             mix-blend-mode: screen; /* Режим наложения для свечения */
+            filter: url('#wavy-fire'); 
+        }
+
+        /* Анимация открытия */
+        .burn-active {
+            animation: openHole 3s forwards ease-in-out;
         }
         .glow-active {
-            animation: glowExpand 2.5s forwards ease-in-out;
+            animation: glowExpand 3s forwards ease-in-out;
         }
+
+        @keyframes openHole {
+            0% { -webkit-mask-image: radial-gradient(circle, transparent 0%, black 0%); }
+            10% { -webkit-mask-image: radial-gradient(circle, transparent 0%, black 10%); } /* Дрожание в начале */
+            100% { -webkit-mask-image: radial-gradient(circle, transparent 150%, black 200%); } /* Полное открытие */
+        }
+
         @keyframes glowExpand {
-            0% { background: radial-gradient(circle at center, rgba(150, 220, 255, 1) 0%, transparent 0%); opacity: 1; }
-            100% { background: radial-gradient(circle at center, rgba(150, 220, 255, 0) 60%, transparent 160%); opacity: 0; }
+            0% { background: radial-gradient(circle, rgba(50, 150, 255, 1) 0%, transparent 0%); opacity: 1; }
+            100% { background: radial-gradient(circle, rgba(50, 150, 255, 0) 70%, transparent 160%); opacity: 0; }
         }
 
     </style>
 </head>
 <body>
 
-    <!-- SVG ФИЛЬТРЫ (НЕВИДИМЫЕ, НО РАБОТАЮТ) -->
+    <!-- SVG ФИЛЬТР (Это сердце эффекта - делает круги рваными) -->
     <svg style="position: absolute; width: 0; height: 0;">
-        <filter id="fire-distortion">
-            <!-- Создает шум (волны) -->
-            <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="3" result="noise" />
-            <!-- Смещает картинку по карте шума -->
-            <feDisplacementMap in="SourceGraphic" in2="noise" scale="50" />
-        </filter>
+        <defs>
+            <filter id="wavy-fire">
+                <!-- Создает шум (турбулентность) -->
+                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="4" result="noise" />
+                <!-- Смещает пиксели на основе шума -->
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="60" />
+            </filter>
+        </defs>
     </svg>
 
-    <!-- СЛОИ -->
-    <div class="transition-out-layer" id="fogLayer"></div>
-    <div class="noise-overlay" id="noiseLayer"></div>
+    <!-- СЛОИ АНИМАЦИИ -->
+    <div class="frost-overlay" id="frost"></div>
+    <div class="noise-texture" id="noise"></div>
 
-    <div class="loader-layer" id="loader">
+    <div class="loader-screen" id="loader">
         <div class="loader-text">Идём за мной...</div>
-        <div class="snow-container">
+        <div class="snow-track">
             <div class="flake f1"></div>
             <div class="flake f2"></div>
             <div class="flake f3"></div>
         </div>
     </div>
 
-    <!-- Слой сгорания (черный) и Слой свечения (синий) -->
-    <div class="fire-glow" id="fireGlow"></div>
-    <div class="burn-curtain" id="burnCurtain" style="display: none;"></div>
-
+    <!-- Слой синего свечения и слой черной маски -->
+    <div class="blue-glow" id="glowLayer"></div>
+    <div class="burn-layer" id="burnLayer" style="display: none;"></div>
 
     <!-- КОНТЕНТ -->
-    <div class="bg" id="bgImage"></div>
+    <div class="bg" id="bg"></div>
     
     <div class="ui-layer">
-        <h1 id="pageTitle">Добро пожаловать, Дова</h1>
-        <div class="menu-btn" onclick="sequence('История')">История</div>
-        <div class="menu-btn" onclick="sequence('Персонаж')">Персонаж</div>
-        <div class="menu-btn" onclick="sequence('Галерея')">Галерея</div>
-        <div class="menu-btn" onclick="sequence('Сборка')">Сборка</div>
+        <h1 id="mainTitle">Глава 1: Начало</h1>
+        <div class="menu-item" onclick="startNolvusEffect('История')">История</div>
+        <div class="menu-item" onclick="startNolvusEffect('Персонаж')">Персонаж</div>
+        <div class="menu-item" onclick="startNolvusEffect('Галерея')">Галерея</div>
+        <div class="menu-item" onclick="startNolvusEffect('Сборка')">Сборка</div>
+        <div class="menu-item" onclick="startNolvusEffect('Дневник')">Дневник</div>
+        <div class="menu-item" onclick="startNolvusEffect('Связь')">Связь</div>
     </div>
 
     <script>
-        function sequence(nextTitle) {
-            const fog = document.getElementById('fogLayer');
-            const noise = document.getElementById('noiseLayer');
+        function startNolvusEffect(nextPageName) {
+            const frost = document.getElementById('frost');
+            const noise = document.getElementById('noise');
             const loader = document.getElementById('loader');
-            const burn = document.getElementById('burnCurtain');
-            const glow = document.getElementById('fireGlow');
-            const title = document.getElementById('pageTitle');
-            const bg = document.getElementById('bgImage');
+            const burn = document.getElementById('burnLayer');
+            const glow = document.getElementById('glowLayer');
+            const title = document.getElementById('mainTitle');
+            const bg = document.getElementById('bg');
 
-            // ШАГ 1: ТЬМА ПОГЛОЩАЕТ (С КРАЕВ)
-            // Используем маску с градиентом
-            fog.classList.add('fog-crawling');
-            noise.classList.add('noise-active'); // Добавляем шум для "рваности"
+            // 1. УХОД (ТУМАН/ЛЕД)
+            // Мы сжимаем огромную виньетку в ноль.
+            // Благодаря mix-blend-mode и шуму это не выглядит как круг.
+            frost.classList.add('frost-active');
+            noise.style.opacity = '0.4'; // Включаем шум
 
-            // ШАГ 2: ЗАГРУЗКА (Через 1.5 сек)
+            // 2. ЧЕРЕЗ 2 СЕКУНДЫ - ЗАГРУЗКА
             setTimeout(() => {
                 loader.style.visibility = 'visible';
                 loader.style.opacity = '1';
-
-                // Подготавливаем сцену для появления
-                // Включаем черную шторку (она закроет все, когда лоадер исчезнет)
-                burn.style.display = 'block'; 
                 
-                // Меняем текст и фон пока не видно
-                title.innerText = nextTitle;
-                // Для теста меняем фон (имитация перехода)
-                // bg.style.backgroundImage = "url('...')";
+                // Подготовка сцены для нового контента
+                burn.style.display = 'block'; // Включаем черную шторку
+                title.innerText = nextPageName; // Меняем заголовок
+                // Тут можно менять фон
+                // bg.style.backgroundImage = "url('ссылка_на_другой_фон')";
 
-            }, 1800);
+            }, 2000);
 
-            // ШАГ 3: СГОРАНИЕ (Через 5 сек)
+            // 3. ЧЕРЕЗ 5 СЕКУНД - ОГОНЬ (ВХОД)
             setTimeout(() => {
-                // Скрываем "уходящий" туман, он больше не нужен
-                fog.classList.remove('fog-crawling');
-                noise.classList.remove('noise-active');
-                
-                // Убираем экран загрузки
-                loader.style.opacity = '0';
+                // Выключаем старый эффект ухода
+                frost.classList.remove('frost-active');
+                noise.style.opacity = '0';
+                loader.style.opacity = '0'; // Убираем лоадер
                 
                 // ЗАПУСКАЕМ ОГОНЬ
-                // burnCurtain (черный) начинает открывать дырку
-                // fireGlow (синий) вспыхивает по краям
+                // SVG фильтр исказит этот круг, сделав его похожим на портал
                 burn.classList.add('burn-active');
                 glow.classList.add('glow-active');
 
-                // Прячем лоадер совсем
-                setTimeout(() => { loader.style.visibility = 'hidden'; }, 500);
-
+                setTimeout(() => { loader.style.visibility = 'hidden'; }, 1000);
             }, 5000);
 
-            // СБРОС (Для повторного теста)
+            // 4. СБРОС (для повторного теста)
             setTimeout(() => {
-                burn.style.display = 'none';
                 burn.classList.remove('burn-active');
                 glow.classList.remove('glow-active');
-            }, 8000);
+                burn.style.display = 'none';
+            }, 9000);
         }
     </script>
 </body>
