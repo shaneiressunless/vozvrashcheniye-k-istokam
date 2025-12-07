@@ -3,281 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Skyrim Soul</title>
+    <title>Nolvus Style</title>
     <style>
-        /* --- 1. ОСНОВНЫЕ НАСТРОЙКИ --- */
-        body {
-            margin: 0;
-            padding: 0;
+        /* --- 1. БАЗА --- */
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
             background-color: #000;
             color: #fff;
-            font-family: 'Cinzel', serif; /* Шрифт похожий на Скайрим */
-            overflow: hidden; /* Запрещаем прокрутку во время анимаций */
+            font-family: 'Cinzel', serif;
+            overflow: hidden;
         }
-        
-        /* Подключаем красивый шрифт */
         @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
 
-        /* --- 2. ГЛАВНЫЙ ФОН (Забытая долина) --- */
-        .background-container {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            /* Картинка ледников и солнца */
+        /* --- 2. ФОН САЙТА --- */
+        .bg-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: url('https://images.unsplash.com/photo-1478479405421-ce83c92fb3ba?q=80&w=1920&auto=format&fit=crop') no-repeat center center/cover;
             z-index: 1;
         }
 
-        /* --- 3. ИНТЕРФЕЙС --- */
-        .content-layer {
-            position: relative;
-            z-index: 2;
-            height: 100vh;
-            display: flex;
+        /* --- 3. МЕНЮ (ПРОСТОЕ) --- */
+        .menu {
+            position: relative; z-index: 5;
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; padding-left: 100px;
         }
+        h1 { font-size: 3rem; text-transform: uppercase; text-shadow: 0 0 20px black; margin-bottom: 40px; }
+        
+        .menu-item {
+            font-size: 1.2rem; margin: 10px 0; cursor: pointer;
+            color: #ccc; transition: 0.3s; width: fit-content;
+            border-bottom: 1px solid transparent;
+        }
+        .menu-item:hover { color: #fff; text-shadow: 0 0 10px #fff; border-bottom: 1px solid #fff; }
 
-        /* Стеклянная панель слева */
-        .glass-sidebar {
-            width: 300px;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.05); /* Почти прозрачная */
-            backdrop-filter: blur(10px); /* Эффект матового стекла */
-            border-right: 1px solid rgba(255, 255, 255, 0.2);
-            padding-top: 50px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 5px 0 30px rgba(0,0,0,0.5);
-        }
 
-        /* Ссылки в панели */
-        .nav-link {
-            width: 80%;
-            padding: 15px;
-            margin: 10px 0;
-            text-align: center;
-            color: #e0e0e0;
-            text-decoration: none;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3);
-            transition: 0.3s;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            letter-spacing: 2px;
-        }
-        .nav-link:hover {
-            background: rgba(255,255,255,0.2);
-            border-color: #aaddff;
-            text-shadow: 0 0 10px #aaddff;
-        }
+        /* =========================================
+           ЭФФЕКТЫ ПЕРЕХОДА (САМОЕ ВАЖНОЕ)
+           ========================================= */
 
-        /* Заголовок сверху */
-        .header-title {
-            position: absolute;
-            top: 30px;
-            left: 350px; /* Отступ от панели */
-            font-size: 3rem;
-            text-shadow: 0 5px 15px rgba(0,0,0,0.8);
-            letter-spacing: 5px;
-            text-transform: uppercase;
-        }
-
-        /* --- 4. ЭФФЕКТ ИНЕЯ (УХОД СО СТРАНИЦЫ) --- */
-        .frost-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            pointer-events: none;
+        /* --- СЛОЙ 1: ТУМАН (УХОД СО СТРАНИЦЫ) --- */
+        /* Это создает виньетку, которая сжимается */
+        .fog-transition {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9000;
-            /* Текстура льда с прозрачным центром (виньетка) */
-            background-image: url('https://i.imgur.com/7Jk9q6w.png'); 
-            background-size: 100% 100%;
+            pointer-events: none;
             
-            /* ХИТРОСТЬ: Изначально мы "зумим" дырку так сильно, что краев не видно */
-            transform: scale(3); 
+            /* Градиент: Прозрачный в центре -> Черный дым по краям */
+            background: radial-gradient(circle, transparent 60%, #000 100%);
             opacity: 0;
-            transition: transform 2.5s ease-in, opacity 2s ease-in;
+            transition: opacity 0.5s;
         }
 
-        /* Класс, который запускает анимацию "сжимания" инея */
-        .frost-active {
+        /* Анимация "Схлопывания" тьмы */
+        .fog-active {
             opacity: 1;
-            transform: scale(1); /* Возвращаем к нормальному размеру - иней закрывает края */
-            background-color: rgba(0, 10, 30, 0.8); /* Затемнение в конце */
+            /* Мы меняем градиент так, чтобы черное поглотило всё */
+            animation: closeEye 1.5s forwards cubic-bezier(0.1, 0.9, 0.2, 1);
         }
 
-        /* --- 5. ЭКРАН ЗАГРУЗКИ (NOLVUS STYLE) --- */
+        @keyframes closeEye {
+            0% { background: radial-gradient(circle, transparent 60%, #000 100%); }
+            100% { background: radial-gradient(circle, transparent 0%, #000 20%); } /* Чернота ползет в центр */
+        }
+
+
+        /* --- СЛОЙ 2: ЭКРАН ЗАГРУЗКИ (NOLVUS) --- */
         .loading-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #111; /* Темно-серый */
             z-index: 9500;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 1s;
-        }
-        
-        /* Ледяная корка сверху экрана загрузки */
-        .loading-ice-frame {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            box-shadow: inset 0 0 150px rgba(170, 220, 255, 0.2);
-            pointer-events: none;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.5s;
         }
 
-        .loading-text {
-            font-size: 2rem;
-            letter-spacing: 3px;
-            color: #ccc;
-            margin-bottom: 20px;
-        }
+        .loading-text { font-size: 1.5rem; letter-spacing: 4px; color: #bbb; margin-bottom: 15px; }
 
-        /* Контейнер для летящих звезд */
-        .stars-container {
-            width: 300px;
-            height: 50px;
-            position: relative;
-            overflow: hidden;
+        /* Снежинки летят вправо */
+        .snow-track {
+            width: 200px; height: 40px; position: relative; overflow: hidden;
+            border-top: 1px solid rgba(255,255,255,0.1); /* Линия декора */
         }
-
-        .star {
-            position: absolute;
-            width: 4px; height: 4px;
-            background: #aaddff;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #fff;
-            opacity: 0;
-            animation: flyRight 2s infinite linear;
+        .snowflake {
+            position: absolute; width: 4px; height: 4px; background: #fff;
+            border-radius: 50%; box-shadow: 0 0 5px #aaffff;
+            opacity: 0; top: 18px;
+            animation: flyRight 1.5s infinite linear;
         }
-        /* Разные задержки для звезд */
-        .star:nth-child(1) { top: 20px; left: -10px; animation-delay: 0s; }
-        .star:nth-child(2) { top: 10px; left: -10px; animation-delay: 0.5s; }
-        .star:nth-child(3) { top: 30px; left: -10px; animation-delay: 1s; }
-        .star:nth-child(4) { top: 25px; left: -10px; animation-delay: 1.5s; }
+        /* Разное время вылета */
+        .s1 { left: 0; animation-delay: 0s; }
+        .s2 { left: 0; animation-delay: 0.4s; }
+        .s3 { left: 0; animation-delay: 0.8s; }
 
         @keyframes flyRight {
             0% { transform: translateX(0); opacity: 0; }
             10% { opacity: 1; }
             90% { opacity: 1; }
-            100% { transform: translateX(300px); opacity: 0; }
+            100% { transform: translateX(200px); opacity: 0; }
         }
 
-        /* --- 6. ЭФФЕКТ СГОРАНИЯ (ПОЯВЛЕНИЕ НОВОЙ СТРАНИЦЫ) --- */
-        /* Это маска, которая закрывает все черным и открывается кругом */
-        .burn-reveal-layer {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+
+        /* --- СЛОЙ 3: СГОРАНИЕ (ПОЯВЛЕНИЕ) --- */
+        /* Черный слой, который лежит поверх всего, а потом в нем появляется дырка */
+        .burn-layer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 9999;
             pointer-events: none;
-            /* В центре прозрачно, края черные. Анимируем размер прозрачности */
-            /* Используем clip-path для жесткого края "выгорания" */
-            clip-path: circle(0% at 50% 50%);
-            transition: clip-path 2s ease-out;
+            /* Магия: мы делаем дырку градиентом */
+            /* Изначально дырки нет (все черное) */
+            background: radial-gradient(circle at center, transparent 0%, #000 0%);
         }
-        
-        /* Синяя кайма огня (опционально, сложно без картинок, но попробуем тень) */
+
         .burn-active {
-            clip-path: circle(150% at 50% 50%); /* Раскрываем круг на весь экран */
+            animation: burnOpen 2s forwards ease-out;
+        }
+
+        @keyframes burnOpen {
+            0% { 
+                /* Дырка 0%, граница жесткая */
+                background: radial-gradient(circle at center, transparent 0%, #00aaff 0%, #000 0%); 
+            }
+            10% {
+                /* Дырка чуть открылась, появился синий огонь (#00aaff) на краю */
+                background: radial-gradient(circle at center, transparent 5%, #00aaff 7%, #000 15%);
+            }
+            100% { 
+                /* Дырка открылась на весь экран (150%) */
+                background: radial-gradient(circle at center, transparent 150%, #00aaff 160%, #000 170%); 
+            }
         }
 
     </style>
 </head>
 <body>
 
-    <!-- Слой Инея (сначала невидим) -->
-    <div class="frost-overlay" id="frost"></div>
-
-    <!-- Слой Загрузки -->
+    <!-- СЛОИ ЭФФЕКТОВ -->
+    <div class="fog-transition" id="fog"></div>
+    
     <div class="loading-screen" id="loader">
-        <div class="loading-ice-frame"></div> <!-- Арка льда -->
         <div class="loading-text">Идём за мной...</div>
-        <div class="stars-container">
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
-            <div class="star"></div>
+        <div class="snow-track">
+            <div class="snowflake s1"></div>
+            <div class="snowflake s2"></div>
+            <div class="snowflake s3"></div>
         </div>
     </div>
 
-    <!-- Слой Выгорания (для появления новой страницы) -->
-    <div class="burn-reveal-layer" id="burnLayer"></div>
+    <div class="burn-layer" id="burn"></div>
 
 
-    <!-- ФОН и КОНТЕНТ СТРАНИЦЫ -->
-    <div class="background-container" id="bgImage"></div>
-
-    <div class="content-layer">
-        <!-- Левая панель -->
-        <div class="glass-sidebar">
-            <h2 style="margin-bottom: 40px; color: #aaddff;">Меню</h2>
-            <!-- Кнопки, которые запускают анимацию -->
-            <div class="nav-link" onclick="startTransition('Глава 1: Начало')">История</div>
-            <div class="nav-link" onclick="startTransition('Персонаж')">О персонаже</div>
-            <div class="nav-link" onclick="startTransition('Галерея')">Галерея</div>
-            <div class="nav-link" onclick="startTransition('Моды')">Сборка</div>
-            <div class="nav-link" onclick="startTransition('Дневник')">Дневник</div>
-            <div class="nav-link" onclick="startTransition('Контакты')">Связь</div>
-        </div>
-
-        <!-- Заголовок -->
-        <div class="header-title">Добро пожаловать, Дова.</div>
+    <!-- КОНТЕНТ -->
+    <div class="bg-container" id="bg"></div>
+    <div class="menu">
+        <h1 id="title">Добро пожаловать, Дова</h1>
+        <div class="menu-item" onclick="go('История')">История</div>
+        <div class="menu-item" onclick="go('Персонаж')">Персонаж</div>
+        <div class="menu-item" onclick="go('Галерея')">Галерея</div>
+        <div class="menu-item" onclick="go('Сборка')">Сборка</div>
     </div>
 
     <script>
-        function startTransition(nextPageName) {
-            const frost = document.getElementById('frost');
+        // Имитация перехода
+        function go(pageName) {
+            const fog = document.getElementById('fog');
             const loader = document.getElementById('loader');
-            const burnLayer = document.getElementById('burnLayer');
+            const burn = document.getElementById('burn');
+            const title = document.getElementById('title');
+            
+            // 1. СГУЩАЕМ ТУМАН (Тушим свет)
+            fog.classList.add('fog-active');
 
-            // 1. ЗАПУСК ИНЕЯ (Ползет от краев)
-            frost.classList.add('frost-active');
-
-            // 2. ЧЕРЕЗ 2.5 СЕКУНДЫ ПОКАЗЫВАЕМ ЗАГРУЗКУ
+            // 2. ЧЕРЕЗ 1.2 СЕК ПОКАЗЫВАЕМ ЗАГРУЗКУ
             setTimeout(() => {
                 loader.style.visibility = 'visible';
                 loader.style.opacity = '1';
                 
-                // (Тут мы меняем контент, пока экран закрыт)
-                // В реальности тут будет window.location.href = "новая_страница.html";
-                // Но сейчас мы просто имитируем смену фона для теста
-                setTimeout(() => {
-                    // Смена фона на "темный" или другой для теста
-                    document.getElementById('bgImage').style.backgroundImage = "url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1920&auto=format&fit=crop')";
-                    document.querySelector('.header-title').innerText = nextPageName;
-                }, 1000);
+                // (Тут типа грузится новая страница)
+                title.innerText = pageName; // Меняем текст для теста
+                
+            }, 1200);
 
-            }, 2500);
-
-            // 3. ЧЕРЕЗ 6 СЕКУНД (Загрузка прошла) -> ЭФФЕКТ СГОРАНИЯ
+            // 3. ЕЩЕ ЧЕРЕЗ 2 СЕК (Загрузилось) -> СГОРАНИЕ
             setTimeout(() => {
-                // Убираем иней и загрузку, но под ними уже черный слой сгорания
-                frost.classList.remove('frost-active'); 
-                frost.style.opacity = '0'; // Скрываем иней
+                // Скрываем туман и лоадер, но включаем слой сгорания
+                fog.classList.remove('fog-active'); // Сброс тумана
                 loader.style.opacity = '0';
                 
-                // Делаем эффект "выгорания" из центра
-                // Сначала слой сгорания закрывает всё (он черный)
-                // Потом он открывается
+                // Слой сгорания сейчас черный (закрыл всё). Запускаем анимацию открытия.
+                burn.classList.add('burn-active');
                 
-                // Важно: Чтобы эффект сработал, burnLayer должен быть активен (закрыт) в момент исчезновения лоадера
-                // В CSS clip-path: circle(0%) означает "все закрыто черным"
-                
-                setTimeout(() => {
-                    // Раскрываем круг
-                    burnLayer.classList.add('burn-active');
-                    loader.style.visibility = 'hidden'; // Прячем лоадер совсем
-                }, 100);
+                setTimeout(() => { loader.style.visibility = 'hidden'; }, 500);
 
-            }, 6000); 
-            
-            // Сброс анимации выгорания через время (чтобы можно было тыкнуть снова)
+            }, 4000);
+
+            // 4. СБРОС (Чтобы можно было кликнуть снова)
             setTimeout(() => {
-                burnLayer.classList.remove('burn-active');
-            }, 8500);
+                burn.classList.remove('burn-active');
+            }, 6500);
         }
     </script>
 
