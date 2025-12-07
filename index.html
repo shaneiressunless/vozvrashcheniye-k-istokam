@@ -3,21 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Возвращение к истокам</title>
+    <title>Добро пожаловать, Дова.</title>
     <style>
-        /* Основной фон и шрифт */
+        /* --- ОСНОВНОЙ СТИЛЬ --- */
         body {
             margin: 0;
             padding: 0;
-            background-color: #0b0b0b; /* Очень темный фон */
-            color: #e0e0e0; /* Светло-серый текст */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            text-align: center;
+            background-color: #0b0b0b;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            overflow-x: hidden; /* Чтобы не было полос прокрутки при анимации */
         }
 
-        /* Заставка на весь экран */
         .hero {
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            /* Фоновая картинка */
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.9)), url('https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
             background-size: cover;
             background-position: center;
             height: 100vh;
@@ -27,75 +27,106 @@
             align-items: center;
         }
 
-        /* Заголовок */
         h1 {
             font-size: 4rem;
-            margin: 0;
             text-transform: uppercase;
             letter-spacing: 5px;
             color: #fff;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            margin: 0;
         }
 
-        /* Подзаголовок */
-        p.subtitle {
-            font-size: 1.5rem;
-            color: #a8a8a8;
-            margin-top: 20px;
-            font-weight: 300;
-        }
+        .subtitle { font-size: 1.2rem; color: #aaa; margin-top: 10px; font-weight: 300; }
 
-        /* Кнопка */
+        /* КНОПКА */
         .btn {
-            margin-top: 40px;
-            padding: 15px 40px;
-            background-color: transparent;
-            border: 2px solid #fff;
+            margin-top: 50px;
+            padding: 15px 50px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.5);
             color: #fff;
-            font-size: 1.2rem;
+            font-size: 1rem;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             cursor: pointer;
             text-decoration: none;
+            position: relative;
+            overflow: hidden;
             transition: 0.3s;
+            z-index: 10;
         }
 
         .btn:hover {
-            background-color: #fff;
-            color: #000;
-            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.1);
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.4);
         }
 
-        /* Основной контент ниже */
-        .content {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 50px 20px;
-            line-height: 1.6;
-            font-size: 1.2rem;
+        /* --- ЭФФЕКТ ИНЕЯ (FROST LAYER) --- */
+        .frost-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none; /* Чтобы клики проходили сквозь него */
+            z-index: 9999;
+            
+            /* Это магия градиента: Центр прозрачный, края белые */
+            /* Изначально края далеко (150%), мы их не видим */
+            background: radial-gradient(circle at center, transparent 50%, #ffffff 150%);
+            
+            opacity: 0; /* Скрыт по умолчанию */
+            transition: all 1.2s cubic-bezier(0.6, 0.05, 0.01, 0.9); /* Плавная анимация */
         }
+
+        /* Когда мы добавляем этот класс JS-ом, иней "схлопывается" */
+        .frost-active {
+            opacity: 1;
+            /* Градиент сдвигается: теперь белое везде (0%) */
+            background: radial-gradient(circle at center, transparent 0%, #ffffff 0%);
+        }
+
     </style>
 </head>
 <body>
 
-    <!-- Верхняя часть с картинкой -->
+    <!-- Слой ледяного эффекта -->
+    <div class="frost-layer" id="ice"></div>
+
     <div class="hero">
         <h1>Возвращение<br>к истокам</h1>
-        <p class="subtitle">Мой личный путь и история</p>
-        <a href="#read-more" class="btn">Читать далее</a>
+        <p class="subtitle">Погружение в бездну</p>
+        
+        <!-- Обрати внимание: добавлен класс transition-link -->
+        <a href="about.html" class="btn transition-link">Войти в мир</a>
     </div>
 
-    <!-- Текст ниже -->
-    <div id="read-more" class="content">
-        <h2>О проекте</h2>
-        <p>
-            Здесь будет текст твоей истории. Мы сделали дизайн в стиле "Dark Cinematic". 
-            Черный фон, строгие шрифты и атмосферность.
-        </p>
-        <p>
-            Ты можешь менять этот текст в файле index.html.
-        </p>
-    </div>
+    <script>
+        // Этот скрипт ловит клик по кнопке
+        document.querySelectorAll('.transition-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault(); // Запрещаем браузеру переходить сразу
+                
+                let targetUrl = this.href; // Запоминаем, куда хотели пойти
+                let iceLayer = document.getElementById('ice');
+
+                // 1. Включаем анимацию (добавляем класс)
+                iceLayer.classList.add('frost-active');
+
+                // 2. Ждем 1.2 секунды (пока экран станет белым) и переходим
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 1200);
+            });
+        });
+
+        // Эффект "Таяния" при входе на страницу (обратная анимация)
+        window.addEventListener('pageshow', function(event) {
+             let iceLayer = document.getElementById('ice');
+             iceLayer.classList.remove('frost-active');
+        });
+    </script>
 
 </body>
 </html>
